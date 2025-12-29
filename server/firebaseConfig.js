@@ -1,13 +1,22 @@
 const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
-  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  const raw = process.env.FIREBASE_ADMIN_SDK; // <-- нова змінна
 
-  if (!serviceAccountPath) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_PATH не встановлено в .env");
+  if (!raw) {
+    throw new Error("FIREBASE_ADMIN_SDK не встановлено в env");
   }
 
-  const serviceAccount = require(serviceAccountPath);
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(raw);
+  } catch (e) {
+    throw new Error("FIREBASE_ADMIN_SDK має бути валідним JSON (одним значенням env)");
+  }
+
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+  }
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

@@ -1,0 +1,225 @@
+.page-header {
+  background: linear-gradient(135deg, var(--color-warm) 0%, var(--color-bg) 100%);
+  padding: var(--spacing-8) 0;
+  text-align: center;
+}
+
+.page-header h1 {
+  margin-bottom: var(--spacing-2);
+}
+
+.services-controls-lite {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+}
+
+.services-search-lite {
+  width: 100%;
+}
+
+.services-chips-lite {
+  display: grid;
+  gap: 8px;
+}
+
+.chips-label {
+  margin-left: 2px;
+}
+
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.chip-lite {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.chip-lite:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.chip-lite:active {
+  transform: translateY(1px);
+}
+
+.chip-lite.active {
+  border-color: rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.chip-lite.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-light);
+  text-decoration: underline;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.services-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+}
+
+.services-empty {
+  padding: var(--spacing-5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+.service-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.service-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.service-icon {
+  font-size: 2rem;
+}
+
+.service-price {
+  font-weight: 600;
+  color: var(--color-accent);
+  font-size: 1.125rem;
+}
+
+.service-duration {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.service-actions {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.service-actions .btn {
+  flex: 1;
+}
+
+.service-detail-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-3);
+}
+
+.service-detail-meta {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-2);
+  background-color: var(--color-warm);
+  border-radius: var(--radius-md);
+}
+
+.service-detail-item {
+  flex: 1;
+}
+
+.service-detail-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-light);
+  font-size: 0.875rem;
+}
+
+.service-detail-description {
+  margin-bottom: var(--spacing-3);
+  line-height: 1.7;
+}
+
+.service-includes {
+  margin-bottom: var(--spacing-4);
+}
+
+.service-includes h4 {
+  margin-bottom: var(--spacing-2);
+}
+
+.service-includes ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.service-includes li {
+  padding-left: var(--spacing-3);
+  position: relative;
+  color: var(--color-text-light);
+}
+
+.service-detail-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.service-detail-actions .btn {
+  flex: 1;
+}
+
+@media (min-width: 900px) {
+  .services-controls-lite {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: end;
+  }
+
+  .services-chips-lite {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .chips-row {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .service-actions {
+    flex-direction: column;
+  }
+
+  .service-detail-meta {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  .service-detail-actions {
+    flex-direction: column;
+  }
+}

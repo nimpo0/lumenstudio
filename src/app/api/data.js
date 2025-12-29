@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "https://nimpo0-github-io.onrender.com";
 
 async function get(path) {
   const res = await fetch(`${API_URL}${path}`);

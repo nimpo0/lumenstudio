@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./LoginAndSignup.css";
+import "./loginAndSignup.css";
 
 const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp }) => {
   const [isLogin, setIsLogin] = useState(true);

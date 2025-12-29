@@ -38,4 +38,4 @@ app.use("/api/services-reviews", servicesReviews);
 app.use("/api/availability", availability);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Сервер запущено на http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Сервер запущено`));

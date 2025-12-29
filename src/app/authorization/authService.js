@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "https://nimpo0-github-io.onrender.com";
 const TOKEN_KEY = "lumen_token";
 
 function getToken() {

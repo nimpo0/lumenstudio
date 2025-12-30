@@ -342,7 +342,7 @@ const Photographers = () => {
 
                   {!availLoading && !availErr && (
                     <div style={{ display: "grid", gap: 14 }}>
-                      <div style={{ display: "flex", justifyContent: "center" }}>
+                      <div className="avail-calendar">
                         <Calendar
                           value={calendarValue}
                           onChange={(v) => setCalendarValue(stripTime(v))}
@@ -370,21 +370,16 @@ const Photographers = () => {
                         {busyForSelectedDay.length === 0 ? (
                           <p className="text-light">На цей день бронювань немає.</p>
                         ) : (
-                          <div style={{ display: "grid", gap: 8 }}>
+                          <div className="avail-slots">
                             {busyForSelectedDay.map((b) => (
                               <div
                                 key={b.bookingId + b.startMin}
-                                style={{
-                                  padding: 10,
-                                  borderRadius: 12,
-                                  border: "1px solid rgba(0,0,0,0.08)",
-                                  background: "white",
-                                }}
+                                className="avail-slot"
                               >
-                                <div style={{ fontWeight: 700 }}>
+                                <div className="avail-slot-time">
                                   {b.startTime} – {b.endTime}
                                 </div>
-                                {b.service && <div className="text-small text-light">{b.service}</div>}
+                                {b.service && <div className="avail-slot-service">{b.service}</div>}
                               </div>
                             ))}
                           </div>

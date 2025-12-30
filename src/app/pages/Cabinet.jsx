@@ -265,25 +265,17 @@ const Cabinet = () => {
                               const booking = normalizeBooking(b);
                               return (
                                 <tr key={booking.id}>
-                                  <td>{booking.date}</td>
-                                  <td>{booking.time}</td>
-                                  <td>{booking.service}</td>
-                                  <td>{booking.photographer}</td>
-                                  <td style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                    <Button
-                                      size="small"
-                                      variant="secondary"
-                                      onClick={() => setSelectedBooking(booking)}
-                                    >
+                                  <td data-label="Дата">{booking.date}</td>
+                                  <td data-label="Час">{booking.time}</td>
+                                  <td data-label="Послуга">{booking.service}</td>
+                                  <td data-label="Фотограф">{booking.photographer}</td>
+                                  <td data-label="Дії" className="booking-actions-cell">
+                                    <Button size="small" variant="secondary" onClick={() => setSelectedBooking(booking)}>
                                       Деталі
                                     </Button>
 
                                     {isActiveStatus(booking.status) && (
-                                      <Button
-                                        size="small"
-                                        variant="secondary"
-                                        onClick={() => handleCancelBooking(booking.id)}
-                                      >
+                                      <Button size="small" variant="secondary" onClick={() => handleCancelBooking(booking.id)}>
                                         Скасувати
                                       </Button>
                                     )}

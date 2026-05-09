@@ -122,7 +122,8 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
                   try {
                     await signInWithGoogleSupabase();
                   } catch (err) {
-                    setErrorText("Не вдалося увійти через Google. Спробуйте email/пароль.");
+                    console.error("Google auth error:", err);
+                    setErrorText(err?.message || String(err) || "Помилка Google входу");
                     setLoading(false);
                   }
                 }}

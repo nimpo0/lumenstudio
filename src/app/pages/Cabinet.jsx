@@ -158,7 +158,11 @@ const CabinetClient = () => {
 
   const startReschedule = (b) => {
     setReschedule(b);
-    setRescheduleForm({ date: b.date || "", time: b.time || "" });
+    const today = new Date().toISOString().slice(0, 10);
+    setRescheduleForm({
+      date: (b.date || "") >= today ? (b.date || today) : today,
+      time: b.time || "10:00",
+    });
     setRescheduleErr("");
   };
 

@@ -20,5 +20,4 @@ if (!admin.apps.length) {
   });
 }
 
-// Тільки admin.auth() — Firestore більше не використовується
 module.exports = { admin };

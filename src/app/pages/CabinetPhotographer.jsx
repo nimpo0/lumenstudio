@@ -213,7 +213,11 @@ const Sessions = ({ bookings, onChangeStatus, onReschedule }) => {
 
   const startReschedule = (b) => {
     setReschedule(b);
-    setForm({ date: b.date, time: b.time });
+    const today = new Date().toISOString().slice(0, 10);
+    setForm({
+      date: (b.date || "") >= today ? b.date : today,
+      time: b.time || "10:00",
+    });
     setErr("");
   };
 
@@ -310,7 +314,7 @@ const AlbumsList = ({ albums }) => {
         {albums.map((a) => (
           <div key={a.id} className="album-card">
             <img
-              src={a.cover || (a.photos && a.photos[0]) || "/placeholder-album.jpg"}
+              src={a.cover || (a.photos && a.photos[0]) || ""}
               alt={a.title}
               className="album-cover"
             />

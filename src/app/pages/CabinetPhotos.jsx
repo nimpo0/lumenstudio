@@ -39,7 +39,7 @@ const AlbumsList = ({ albums, bookingsById }) => {
           return (
             <div key={album.id} className="album-card">
               <img
-                src={album.cover || photos[0] || "/placeholder-album.jpg"}
+                src={album.cover || photos[0] || ""}
                 alt={album.title}
                 className="album-cover"
               />

@@ -21,7 +21,6 @@ async function uniqueId(table, base) {
   }
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────
 router.get("/stats", async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -52,7 +51,6 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-// ── Photographers ──────────────────────────────────────────────────────────
 router.get("/photographers", async (req, res) => {
   try {
     const rows = await db.many("SELECT * FROM photographers ORDER BY name");
@@ -130,7 +128,6 @@ router.delete("/photographers/:id", async (req, res) => {
   }
 });
 
-// ── Services ───────────────────────────────────────────────────────────────
 router.get("/services", async (req, res) => {
   try {
     const rows = await db.many("SELECT * FROM services ORDER BY id");
@@ -192,7 +189,6 @@ router.delete("/services/:id", async (req, res) => {
   }
 });
 
-// ── Studios ────────────────────────────────────────────────────────────────
 router.get("/studios", async (req, res) => {
   try {
     const rows = await db.many("SELECT * FROM studios ORDER BY name");

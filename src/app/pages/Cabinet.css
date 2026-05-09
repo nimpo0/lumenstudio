@@ -118,6 +118,14 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
+  background: var(--color-warm);
+}
+
+.album-cover:not([src]),
+.album-cover[src=""] {
+  display: block;
+  min-height: 200px;
+  background: linear-gradient(135deg, var(--color-warm) 0%, var(--color-bg-dark) 100%);
 }
 
 .album-info {

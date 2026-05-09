@@ -151,6 +151,49 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+router.post("/supabase-google", async (req, res) => {
+  try {
+    const { email, name, accessToken } = req.body;
+    if (!email) return res.status(400).json({ message: "Потрібен email" });
+    if (!accessToken) return res.status(400).json({ message: "Потрібен accessToken" });
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      const checkRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: supabaseKey,
+        },
+      });
+      if (!checkRes.ok) {
+        return res.status(401).json({ message: "Невалідний Supabase токен" });
+      }
+    }
+
+    let user = await db.one("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+
+    if (!user) {
+      const role = isAdminEmail(email) ? "admin" : "client";
+      const id = randomUUID();
+      await db.query(
+        `INSERT INTO users (id, email, name, role, provider, created_at)
+         VALUES ($1,$2,$3,$4,'google',NOW())`,
+        [id, email.toLowerCase(), name || "", role]
+      );
+      user = await db.one("SELECT * FROM users WHERE id = $1", [id]);
+    }
+
+    const role = user.role || (isAdminEmail(email) ? "admin" : "client");
+    const token = signToken(user.id, user.email, role, user.photographer_id);
+    return res.json({ token, user: userResponse({ ...user, role }) });
+  } catch (e) {
+    console.error("Помилка Supabase Google входу:", e);
+    return res.status(500).json({ message: "Помилка входу", error: String(e) });
+  }
+});
+
 router.patch("/me", authMiddleware, async (req, res) => {
   try {
     const newName = String(req.body.name || "").trim();

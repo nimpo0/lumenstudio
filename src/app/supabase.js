@@ -12,6 +12,28 @@ function getClient() {
   return _client;
 }
 
+export function getSupabase() {
+  return getClient();
+}
+
+export async function signInWithGoogleSupabase() {
+  const client = getClient();
+  const { error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+  if (error) throw error;
+}
+
+export async function getSupabaseSession() {
+  const client = getClient();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  return data.session;
+}
+
 export async function uploadFile(path, file, onProgress) {
   const client = getClient();
   const { data, error } = await client.storage

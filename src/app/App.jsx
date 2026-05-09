@@ -11,6 +11,7 @@ import Booking from './pages/Booking';
 import Cabinet from './pages/Cabinet';
 import Admin from './pages/Admin';
 import Studios from './pages/Studios';
+import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from "./authorization/protectedRoute";
 import { AuthProvider } from "./authorization/authContext";
 import '../styles/app.css';
@@ -29,6 +30,7 @@ function App() {
               <Route path="/photographers" element={<Photographers />} />
               <Route path="/about" element={<About />} />
               <Route path="/studios" element={<Studios />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/booking"
                 element={

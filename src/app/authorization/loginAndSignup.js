@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { signInWithGoogleSupabase } from "../supabase";
 import "./loginAndSignup.css";
 
 const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) => {
@@ -109,8 +110,7 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
             {loading ? "Зачекайте…" : isLogin ? "Увійти" : "Зареєструватися"}
           </button>
 
-          {onGoogleLogin && (
-            <>
+          <>
               <div className="ls-divider"><span>або</span></div>
               <button
                 type="button"
@@ -120,18 +120,9 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
                   setErrorText("");
                   setLoading(true);
                   try {
-                    await onGoogleLogin();
-                    onClose?.();
+                    await signInWithGoogleSupabase();
                   } catch (err) {
-                    const msg = err?.message || "";
-                    if (msg.includes("api-key") || msg.includes("invalid-api-key")) {
-                      setErrorText("Google вхід не налаштований. Зверніться до адміністратора.");
-                    } else if (msg.includes("popup-closed")) {
-                      setErrorText("Вікно авторизації закрито. Спробуйте ще раз.");
-                    } else {
-                      setErrorText("Не вдалося увійти через Google. Спробуйте email/пароль.");
-                    }
-                  } finally {
+                    setErrorText("Не вдалося увійти через Google. Спробуйте email/пароль.");
                     setLoading(false);
                   }
                 }}
@@ -144,8 +135,7 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
                 </svg>
                 Увійти через Google
               </button>
-            </>
-          )}
+          </>
 
           <div className="ls-switch">
             <span className="ls-switch-text">

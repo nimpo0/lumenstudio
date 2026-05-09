@@ -81,6 +81,7 @@ const Schedule = ({ bookings, blocks, onAddBlock, onRemoveBlock }) => {
   const [pickedDate, setPickedDate] = useState(new Date());
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ startTime: "10:00", endTime: "12:00", reason: "" });
+  const [blockErr, setBlockErr] = useState("");
 
   const dateStr = fmt(pickedDate);
 
@@ -105,6 +106,13 @@ const Schedule = ({ bookings, blocks, onAddBlock, onRemoveBlock }) => {
   };
 
   const submitBlock = async () => {
+    const [sh, sm] = form.startTime.split(":").map(Number);
+    const [eh, em] = form.endTime.split(":").map(Number);
+    if (eh * 60 + em <= sh * 60 + sm) {
+      setBlockErr("Час закінчення має бути пізніше початку.");
+      return;
+    }
+    setBlockErr("");
     await onAddBlock({ date: dateStr, ...form });
     setShowAdd(false);
     setForm({ startTime: "10:00", endTime: "12:00", reason: "" });
@@ -121,7 +129,7 @@ const Schedule = ({ bookings, blocks, onAddBlock, onRemoveBlock }) => {
             onChange={setPickedDate}
             tileContent={tileContent}
           />
-          <Button style={{ marginTop: 12 }} onClick={() => setShowAdd(true)}>
+          <Button onClick={() => setShowAdd(true)}>
             + Заблокувати час на {dateStr}
           </Button>
         </div>
@@ -193,9 +201,10 @@ const Schedule = ({ bookings, blocks, onAddBlock, onRemoveBlock }) => {
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
               />
             </div>
+            {blockErr && <p className="text-small" style={{ color: "crimson" }}>{blockErr}</p>}
             <div style={{ display: "flex", gap: 10 }}>
               <Button onClick={submitBlock}>Зберегти</Button>
-              <Button variant="secondary" onClick={() => setShowAdd(false)}>Скасувати</Button>
+              <Button variant="secondary" onClick={() => { setShowAdd(false); setBlockErr(""); }}>Скасувати</Button>
             </div>
           </div>
         </Modal>
@@ -249,7 +258,7 @@ const Sessions = ({ bookings, onChangeStatus, onReschedule }) => {
             </tr>
           </thead>
           <tbody>
-            {bookings.map((b) => (
+            {bookings.filter((b) => b.status !== "cancelled").map((b) => (
               <tr key={b.id}>
                 <td>{b.date}</td>
                 <td>{b.time}</td>
@@ -257,6 +266,7 @@ const Sessions = ({ bookings, onChangeStatus, onReschedule }) => {
                 <td>
                   <select
                     className="input"
+                    style={{ maxWidth: 190 }}
                     value={STATUS_FLOW.includes(b.status) ? b.status : "Підтверджено"}
                     onChange={(e) => onChangeStatus(b.id, e.target.value)}
                   >
@@ -285,7 +295,7 @@ const Sessions = ({ bookings, onChangeStatus, onReschedule }) => {
             <div className="form-row">
               <div className="form-group">
                 <label className="label">Нова дата</label>
-                <input className="input" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <input className="input" type="date" value={form.date} min={new Date().toISOString().split("T")[0]} onChange={(e) => setForm({ ...form, date: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="label">Новий час</label>

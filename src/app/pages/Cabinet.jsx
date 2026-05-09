@@ -25,6 +25,7 @@ const CabinetClient = () => {
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [loadingMe, setLoadingMe] = useState(true);
   const [savingName, setSavingName] = useState(false);
+  const [savedName, setSavedName] = useState(false);
   const [errorBookings, setErrorBookings] = useState("");
   const [errorMe, setErrorMe] = useState("");
   const [errorSave, setErrorSave] = useState("");
@@ -129,8 +130,8 @@ const CabinetClient = () => {
       const updated = await profileApi.updateName(newName);
       setMe(updated);
       setName(updated?.name || newName);
-
-      alert("Збережено");
+      setSavedName(true);
+      setTimeout(() => setSavedName(false), 2500);
     } catch (e) {
       setErrorSave("Не вдалося зберегти ім'я.");
     } finally {
@@ -357,14 +358,21 @@ const CabinetClient = () => {
                           <input type="email" className="input" value={me?.email || ""} disabled />
                         </div>
 
+                        {errorSave && (
+                          <p className="text-small" style={{ color: "crimson" }}>{errorSave}</p>
+                        )}
+                        {savedName && (
+                          <p className="text-small" style={{ color: "var(--color-accent)" }}>Збережено ✓</p>
+                        )}
+
                         <Button
                           onClick={async () => {
                             if (!user) return;
                             await handleSaveName();
-                            alert("Збережено");
                           }}
+                          disabled={savingName}
                         >
-                          Зберегти зміни
+                          {savingName ? "Зберігаємо..." : "Зберегти зміни"}
                         </Button>
                       </div>
                     </div>

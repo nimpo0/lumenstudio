@@ -44,7 +44,7 @@
 
 .overview-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-6);
 }
@@ -70,6 +70,10 @@
 
 .cabinet-section {
   margin-bottom: var(--spacing-5);
+}
+
+.cabinet-overview > h2:first-child {
+  margin-bottom: var(--spacing-4);
 }
 
 .cabinet-section h2 {

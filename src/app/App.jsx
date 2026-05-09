@@ -9,6 +9,8 @@ import Photographers from './pages/Photographers';
 import About from './pages/About';
 import Booking from './pages/Booking';
 import Cabinet from './pages/Cabinet';
+import Admin from './pages/Admin';
+import Studios from './pages/Studios';
 import ProtectedRoute from "./authorization/protectedRoute";
 import { AuthProvider } from "./authorization/authContext";
 import '../styles/app.css';
@@ -26,10 +28,11 @@ function App() {
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/photographers" element={<Photographers />} />
               <Route path="/about" element={<About />} />
+              <Route path="/studios" element={<Studios />} />
               <Route
                 path="/booking"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute roles={["client"]}>
                     <Booking />
                   </ProtectedRoute>
                 }
@@ -40,6 +43,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Cabinet />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute roles={["admin"]}>
+                    <Admin />
                   </ProtectedRoute>
                 }
               />

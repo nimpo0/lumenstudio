@@ -5,6 +5,7 @@ import Button from "../components/Button";
 import Modal from "../components/Modal";
 import "./Cabinet.css";
 import CabinetPhotos from "./CabinetPhotos";
+import CabinetPhotographer from "./CabinetPhotographer";
 import { bookingsApi } from "../api/bookings";
 import { profileApi } from "../api/profile";
 
@@ -12,7 +13,7 @@ function isActiveStatus(status) {
   return status === "Підтверджено" || status === "pending_assignment";
 }
 
-const Cabinet = () => {
+const CabinetClient = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -150,6 +151,32 @@ const Cabinet = () => {
     }
   };
 
+  const [reschedule, setReschedule] = useState(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ date: "", time: "" });
+  const [rescheduleBusy, setRescheduleBusy] = useState(false);
+  const [rescheduleErr, setRescheduleErr] = useState("");
+
+  const startReschedule = (b) => {
+    setReschedule(b);
+    setRescheduleForm({ date: b.date || "", time: b.time || "" });
+    setRescheduleErr("");
+  };
+
+  const submitReschedule = async () => {
+    if (!reschedule) return;
+    setRescheduleBusy(true);
+    setRescheduleErr("");
+    try {
+      await bookingsApi.reschedule(reschedule.id, rescheduleForm);
+      await refreshBookings();
+      setReschedule(null);
+    } catch (e) {
+      setRescheduleErr(e?.data?.message || "Не вдалося перенести");
+    } finally {
+      setRescheduleBusy(false);
+    }
+  };
+
   return (
     <div className="cabinet-page">
       <section className="page-header">
@@ -206,8 +233,8 @@ const Cabinet = () => {
                           <div className="overview-number">{stats.active}</div>
                         </div>
                         <div className="overview-card">
-                          <h3>Фотографій у архівах</h3>
-                          <div className="overview-number">{stats.photosCount}</div>
+                          <h3>Завершені сесії</h3>
+                          <div className="overview-number">{stats.finished}</div>
                         </div>
                       </div>
 
@@ -275,9 +302,14 @@ const Cabinet = () => {
                                     </Button>
 
                                     {isActiveStatus(booking.status) && (
-                                      <Button size="small" variant="secondary" onClick={() => handleCancelBooking(booking.id)}>
-                                        Скасувати
-                                      </Button>
+                                      <>
+                                        <Button size="small" variant="secondary" onClick={() => startReschedule(booking)}>
+                                          Перенести
+                                        </Button>
+                                        <Button size="small" variant="secondary" onClick={() => handleCancelBooking(booking.id)}>
+                                          Скасувати
+                                        </Button>
+                                      </>
                                     )}
                                   </td>
                                 </tr>
@@ -380,8 +412,66 @@ const Cabinet = () => {
           </div>
         </Modal>
       )}
+
+      {reschedule && (
+        <Modal
+          title="Перенести бронювання"
+          isOpen={!!reschedule}
+          onClose={() => setReschedule(null)}
+        >
+          <div style={{ display: "grid", gap: 12 }}>
+            <p className="text-light">{reschedule.service || reschedule.serviceLabel || reschedule.serviceId}</p>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="label">Нова дата</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={rescheduleForm.date}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setRescheduleForm({ ...rescheduleForm, date: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Новий час</label>
+                <input
+                  type="time"
+                  className="input"
+                  value={rescheduleForm.time}
+                  onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <p className="text-small text-light">
+              Перенесення доступне не пізніше ніж за 24 години до сесії.
+            </p>
+
+            {rescheduleErr && (
+              <p className="text-light" style={{ color: "crimson" }}>{rescheduleErr}</p>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <Button onClick={submitReschedule} disabled={rescheduleBusy}>
+                {rescheduleBusy ? "Зберігаємо..." : "Підтвердити"}
+              </Button>
+              <Button variant="secondary" onClick={() => setReschedule(null)}>Скасувати</Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
+};
+
+const Cabinet = () => {
+  const { user, authLoading } = useAuth();
+
+  if (authLoading) return <p className="text-light" style={{ padding: 20 }}>Завантаження...</p>;
+  if (!user) return null;
+
+  if (user.role === "photographer") return <CabinetPhotographer />;
+  return <CabinetClient />;
 };
 
 export default Cabinet;

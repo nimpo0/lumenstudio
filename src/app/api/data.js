@@ -12,4 +12,5 @@ export const dataApi = {
   portfolio: () => get("/api/data/portfolio"),
   services: () => get("/api/data/services"),
   photographers: () => get("/api/data/photographers"),
+  studios: () => get("/api/data/studios"),
 };

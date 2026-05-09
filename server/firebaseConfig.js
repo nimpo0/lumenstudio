@@ -1,17 +1,14 @@
 const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
-  const raw = process.env.FIREBASE_ADMIN_SDK; // <-- нова змінна
-
-  if (!raw) {
-    throw new Error("FIREBASE_ADMIN_SDK не встановлено в env");
-  }
+  const raw = process.env.FIREBASE_ADMIN_SDK;
+  if (!raw) throw new Error("FIREBASE_ADMIN_SDK не встановлено в env");
 
   let serviceAccount;
   try {
     serviceAccount = JSON.parse(raw);
   } catch (e) {
-    throw new Error("FIREBASE_ADMIN_SDK має бути валідним JSON (одним значенням env)");
+    throw new Error("FIREBASE_ADMIN_SDK має бути валідним JSON");
   }
 
   if (serviceAccount.private_key) {
@@ -23,5 +20,5 @@ if (!admin.apps.length) {
   });
 }
 
-const db = admin.firestore();
-module.exports = { admin, db };
+// Тільки admin.auth() — Firestore більше не використовується
+module.exports = { admin };

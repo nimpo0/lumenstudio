@@ -1,46 +1,73 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { db } = require("../firebaseConfig");
+const { randomUUID } = require("crypto");
+const { admin } = require("../firebaseConfig");
+const { db } = require("../db");
 const { authMiddleware } = require("../middleware/middleware");
 
 const router = express.Router();
+
+function getAdminEmails() {
+  return (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isAdminEmail(email) {
+  return getAdminEmails().includes(String(email || "").toLowerCase());
+}
+
+function signToken(uid, email, role, photographerId) {
+  return jwt.sign(
+    { uid, email, role, photographerId: photographerId || null },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+}
+
+function userResponse(row) {
+  return {
+    uid: row.id,
+    email: row.email,
+    name: row.name || "",
+    role: row.role || "client",
+    photographerId: row.photographer_id || null,
+  };
+}
 
 router.get("/ping", (req, res) => res.json({ ok: true, route: "auth" }));
 
 router.post("/register", async (req, res) => {
   try {
     const { email, password, name } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ message: "Потрібно вказати email та пароль" });
     }
 
-    const existing = await db.collection("users").where("email", "==", email).limit(1).get();
-    if (!existing.empty) {
+    const existing = await db.one("SELECT id FROM users WHERE email = $1", [email]);
+    if (existing) {
       return res.status(409).json({ message: "Користувач вже існує" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const role = isAdminEmail(email) ? "admin" : "client";
+    const id = randomUUID();
 
-    const userRef = await db.collection("users").add({
-      email,
-      name: name || "",
-      passwordHash,
-      createdAt: new Date().toISOString(),
-    });
-
-    const token = jwt.sign(
-      { uid: userRef.id, email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+    await db.query(
+      `INSERT INTO users (id, email, name, password_hash, role, provider, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'password', NOW())`,
+      [id, email, name || "", passwordHash, role]
     );
 
+    const token = signToken(id, email, role, null);
     return res.status(201).json({
       token,
-      user: { uid: userRef.id, email, name: name || "" },
+      user: { uid: id, email, name: name || "", role, photographerId: null },
     });
   } catch (e) {
+    console.error("Помилка реєстрації:", e);
     return res.status(500).json({ message: "Помилка реєстрації", error: String(e) });
   }
 });
@@ -48,54 +75,95 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ message: "Потрібно вказати email та пароль" });
     }
 
-    const snap = await db.collection("users").where("email", "==", email).limit(1).get();
-    if (snap.empty) {
+    const user = await db.one("SELECT * FROM users WHERE email = $1", [email]);
+    if (!user) {
       return res.status(401).json({ message: "Невірні облікові дані" });
     }
+    if (!user.password_hash) {
+      return res.status(401).json({ message: "Цей акаунт використовує інший спосіб входу" });
+    }
 
-    const doc = snap.docs[0];
-    const user = doc.data();
-
-    const ok = await bcrypt.compare(password, user.passwordHash);
+    const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) {
       return res.status(401).json({ message: "Невірні облікові дані" });
     }
 
-    const token = jwt.sign(
-      { uid: doc.id, email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    let role = user.role || (isAdminEmail(email) ? "admin" : "client");
+    if (role !== user.role) {
+      await db.query("UPDATE users SET role = $1 WHERE id = $2", [role, user.id]);
+    }
 
-    return res.json({
-      token,
-      user: { uid: doc.id, email: user.email, name: user.name || "" },
-    });
+    const token = signToken(user.id, user.email, role, user.photographer_id);
+    return res.json({ token, user: userResponse({ ...user, role }) });
   } catch (e) {
+    console.error("Помилка входу:", e);
     return res.status(500).json({ message: "Помилка входу", error: String(e) });
+  }
+});
+
+router.post("/google", async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ message: "Потрібен idToken" });
+
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const email = (decoded.email || "").toLowerCase();
+    const name = decoded.name || "";
+    if (!email) return res.status(400).json({ message: "Google акаунт без email" });
+
+    let user = await db.one("SELECT * FROM users WHERE email = $1", [email]);
+
+    if (!user) {
+      const role = isAdminEmail(email) ? "admin" : "client";
+      const id = randomUUID();
+      await db.query(
+        `INSERT INTO users (id, email, name, role, provider, google_uid, created_at)
+         VALUES ($1, $2, $3, $4, 'google', $5, NOW())`,
+        [id, email, name, role, decoded.uid]
+      );
+      user = await db.one("SELECT * FROM users WHERE id = $1", [id]);
+    } else if (!user.google_uid) {
+      await db.query("UPDATE users SET google_uid = $1 WHERE id = $2", [decoded.uid, user.id]);
+    }
+
+    const role = user.role || (isAdminEmail(email) ? "admin" : "client");
+    const token = signToken(user.id, email, role, user.photographer_id);
+    return res.json({ token, user: userResponse({ ...user, role }) });
+  } catch (e) {
+    console.error("Помилка Google входу:", e);
+    return res.status(401).json({ message: "Невалідний Google токен" });
   }
 });
 
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const userDoc = await db.collection("users").doc(req.user.uid).get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ message: "Користувача не знайдено" });
-    }
+    const user = await db.one("SELECT * FROM users WHERE id = $1", [req.user.uid]);
+    if (!user) return res.status(404).json({ message: "Користувача не знайдено" });
 
-    const data = userDoc.data();
-    return res.json({
-      uid: req.user.uid,
-      email: data.email,
-      name: data.name || "",
-    });
+    const role = user.role || (isAdminEmail(user.email) ? "admin" : "client");
+    return res.json(userResponse({ ...user, role }));
   } catch (e) {
-    return res.status(500).json({ message: "Помилка отримання інформації про користувача", error: String(e) });
+    return res.status(500).json({ message: "Помилка отримання профілю", error: String(e) });
+  }
+});
+
+router.patch("/me", authMiddleware, async (req, res) => {
+  try {
+    const newName = String(req.body.name || "").trim();
+    if (newName.length < 2) {
+      return res.status(400).json({ message: "Ім'я має бути мінімум 2 символи" });
+    }
+    const user = await db.one(
+      "UPDATE users SET name = $1 WHERE id = $2 RETURNING *",
+      [newName, req.user.uid]
+    );
+    return res.json(userResponse(user));
+  } catch (e) {
+    return res.status(500).json({ message: "Помилка оновлення профілю", error: String(e) });
   }
 });
 

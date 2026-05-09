@@ -1,48 +1,45 @@
 const express = require("express");
-const { db } = require("../firebaseConfig");
+const { db } = require("../db");
 const { authMiddleware } = require("../middleware/middleware");
 
 const router = express.Router();
 
+function albumRow(r) {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    bookingId: r.booking_id,
+    title: r.title,
+    status: r.status,
+    message: r.message,
+    cover: r.cover,
+    photos: r.photos || [],
+    createdAt: r.created_at,
+  };
+}
+
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    if (!req.user?.uid) return res.status(401).json({ message: "Нема токена" });
-
-    const snap = await db.collection("albums")
-      .where("userId", "==", req.user.uid)
-      .get();
-
-    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    items.sort((a, b) => {
-      const ta = Date.parse(a.createdAt || "") || 0;
-      const tb = Date.parse(b.createdAt || "") || 0;
-      return tb - ta;
-    });
-
-    return res.json(items);
+    const rows = await db.many(
+      "SELECT * FROM albums WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.user.uid]
+    );
+    res.json(rows.map(albumRow));
   } catch (e) {
-    console.error("Помилка отримання альбомів", e);
-    return res.status(500).json({ message: "Помилка отримання альбомів", error: String(e) });
+    res.status(500).json({ message: "Помилка отримання альбомів", error: String(e) });
   }
 });
 
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
-    if (!req.user?.uid) return res.status(401).json({ message: "Нема токена" });
-
-    const ref = db.collection("albums").doc(req.params.id);
-    const snap = await ref.get();
-
-    if (!snap.exists) return res.status(404).json({ message: "Немає альбому" });
-
-    const data = snap.data();
-    if (data.userId !== req.user.uid) return res.status(403).json({ message: "Немає доступу до альбому" });
-
-    return res.json({ id: snap.id, ...data });
+    const row = await db.one("SELECT * FROM albums WHERE id = $1", [req.params.id]);
+    if (!row) return res.status(404).json({ message: "Немає альбому" });
+    if (row.user_id !== req.user.uid) {
+      return res.status(403).json({ message: "Немає доступу до альбому" });
+    }
+    res.json(albumRow(row));
   } catch (e) {
-    console.error("Помилка отримання альбому", e);
-    return res.status(500).json({ message: "Помилка отримання альбому", error: String(e) });
+    res.status(500).json({ message: "Помилка отримання альбому", error: String(e) });
   }
 });
 

@@ -1,3 +1,5 @@
+import { signInWithGoogle } from "../firebase";
+
 const API_URL = "https://nimpo0-github-io.onrender.com";
 const TOKEN_KEY = "lumen_token";
 
@@ -49,6 +51,17 @@ export async function logIn(email, password) {
   const data = await api("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+
+  setToken(data.token);
+  return data.user;
+}
+
+export async function logInWithGoogle() {
+  const { idToken } = await signInWithGoogle();
+  const data = await api("/api/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
   });
 
   setToken(data.token);

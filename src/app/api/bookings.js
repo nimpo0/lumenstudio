@@ -45,4 +45,18 @@ export const bookingsApi = {
   remove(id) {
     return api(`/api/bookings/${id}`, { method: "DELETE" });
   },
+
+  reschedule(id, { date, time }) {
+    return api(`/api/bookings/${id}/reschedule`, {
+      method: "PATCH",
+      body: JSON.stringify({ date, time }),
+    });
+  },
+
+  pay(id, { method }) {
+    return api(`/api/bookings/${id}/pay`, {
+      method: "POST",
+      body: JSON.stringify({ method }),
+    });
+  },
 };

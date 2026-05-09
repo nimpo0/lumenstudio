@@ -13,4 +13,11 @@ export const availabilityApi = {
     const qs = new URLSearchParams({ photographerId, from, to }).toString();
     return get(`/api/availability?${qs}`);
   },
+  get({ photographerId, studioId, from, to }) {
+    const params = { from, to };
+    if (photographerId) params.photographerId = photographerId;
+    if (studioId) params.studioId = studioId;
+    const qs = new URLSearchParams(params).toString();
+    return get(`/api/availability?${qs}`);
+  },
 };

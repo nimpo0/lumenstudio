@@ -10,6 +10,8 @@ const albumsReviews = require("./routes/reviews.js");
 const photographerReviews = require("./routes/photographerReviews.js");
 const servicesReviews = require("./routes/servicesReviews.js");
 const availability = require("./routes/availability.js");
+const adminRoutes = require("./routes/admin.js");
+const photographerRoutes = require("./routes/photographer.js");
 
 const app = express();
 
@@ -36,6 +38,10 @@ app.use("/api/photographer-reviews", photographerReviews);
 app.use("/api/services-reviews", servicesReviews);
 
 app.use("/api/availability", availability);
+
+app.use("/api/admin", adminRoutes);
+
+app.use("/api/photographer", photographerRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Сервер запущено`));

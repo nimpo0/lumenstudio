@@ -189,6 +189,103 @@
   box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.12);
 }
 
+.booking-error {
+  color: crimson;
+  margin-top: 8px;
+}
+
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.slot-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.slot-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.slot-btn.is-selected {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.slot-btn.is-busy {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.4);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.payment-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .payment-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.payment-option.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-warm);
+}
+
+.payment-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
+
+.payment-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-mock .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 1024px) {
   .booking-layout {
     grid-template-columns: 1fr;

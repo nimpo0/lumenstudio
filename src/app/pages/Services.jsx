@@ -158,7 +158,7 @@ const Services = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
-  const { user, login, signup, authLoading } = useAuth();
+  const { user, login, signup, loginWithGoogle, authLoading } = useAuth();
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -423,6 +423,11 @@ const Services = () => {
             }}
             onSignUp={async (email, pass, name) => {
               await signup(email, pass, name);
+              setAuthOpen(false);
+              navigate("/booking");
+            }}
+            onGoogleLogin={async () => {
+              await loginWithGoogle();
               setAuthOpen(false);
               navigate("/booking");
             }}

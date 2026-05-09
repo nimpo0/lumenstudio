@@ -1,68 +1,86 @@
 const express = require("express");
-const { db } = require("../firebaseConfig");
+const { db } = require("../db");
 
 const router = express.Router();
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidDate(d) {
-  if (!DATE_RE.test(d)) return false;
-  const x = new Date(d + "T00:00:00");
-  return !Number.isNaN(x.getTime());
-}
-
 function minToTime(m) {
-  const hh = String(Math.floor(m / 60)).padStart(2, "0");
-  const mm = String(m % 60).padStart(2, "0");
-  return `${hh}:${mm}`;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
 router.get("/", async (req, res) => {
   try {
-    const { photographerId, from, to } = req.query;
-
-    if (!photographerId) return res.status(400).json({ message: "Потрібен ідентифікатор фотографа" });
-    if (!from || !to) return res.status(400).json({ message: "Потрібні дати початку та кінця" });
-    if (!isValidDate(from) || !isValidDate(to)) return res.status(400).json({ message: "Неправильна дата" });
-
-    const photId = String(photographerId);
-
-    const snap = await db
-      .collection("bookings")
-      .where("photographerId", "==", photId)
-      .get();
+    const { photographerId, studioId, from, to } = req.query;
+    if (!from || !to) {
+      return res.status(400).json({ message: "Потрібні дати from та to" });
+    }
 
     const busy = [];
 
-    snap.docs.forEach((d) => {
-      const b = d.data() || {};
-      if (b.status === "cancelled") return;
-
-      const date = String(b.date || "");
-      if (!DATE_RE.test(date)) return;
-      if (date < from || date > to) return;
-
-      const startMin = Number.isFinite(b.startMin) ? Number(b.startMin) : null;
-      const endMin = Number.isFinite(b.endMin) ? Number(b.endMin) : null;
-      if (startMin == null || endMin == null) return;
-
-      busy.push({
-        date,
-        startMin,
-        endMin,
-        startTime: minToTime(startMin),
-        endTime: minToTime(endMin),
-        service: b.serviceLabel || b.serviceId || null,
-        bookingId: d.id,
+    if (photographerId) {
+      const bookings = await db.many(
+        `SELECT date, start_min, end_min, service_label
+         FROM bookings
+         WHERE photographer_id = $1 AND date >= $2 AND date <= $3 AND status != 'cancelled'`,
+        [photographerId, from, to]
+      );
+      bookings.forEach((b) => {
+        busy.push({
+          source: "booking",
+          date: b.date,
+          startMin: b.start_min,
+          endMin: b.end_min,
+          startTime: minToTime(b.start_min),
+          endTime: minToTime(b.end_min),
+          service: b.service_label,
+        });
       });
-    });
 
-    busy.sort((a, b) => (a.date === b.date ? a.startMin - b.startMin : a.date.localeCompare(b.date)));
+      const blocks = await db.many(
+        `SELECT date, start_min, end_min, start_time, end_time, reason
+         FROM photographer_blocks
+         WHERE photographer_id = $1 AND date >= $2 AND date <= $3`,
+        [photographerId, from, to]
+      );
+      blocks.forEach((b) => {
+        busy.push({
+          source: "block",
+          date: b.date,
+          startMin: b.start_min,
+          endMin: b.end_min,
+          startTime: b.start_time,
+          endTime: b.end_time,
+          reason: b.reason || "Заблоковано",
+        });
+      });
+    }
 
-    return res.json({ photographerId: photId, from, to, busy });
+    if (studioId) {
+      const bookings = await db.many(
+        `SELECT date, start_min, end_min
+         FROM bookings
+         WHERE studio_id = $1 AND date >= $2 AND date <= $3 AND status != 'cancelled'`,
+        [studioId, from, to]
+      );
+      bookings.forEach((b) => {
+        busy.push({
+          source: "studio",
+          date: b.date,
+          startMin: b.start_min,
+          endMin: b.end_min,
+          startTime: minToTime(b.start_min),
+          endTime: minToTime(b.end_min),
+        });
+      });
+    }
+
+    busy.sort((a, b) =>
+      a.date === b.date ? a.startMin - b.startMin : a.date.localeCompare(b.date)
+    );
+
+    res.json({ photographerId, studioId, from, to, busy });
   } catch (e) {
-    console.error("Помилка сервера:", e);
-    return res.status(500).json({ message: "Помилка сервера", error: String(e) });
+    console.error("Помилка availability:", e);
+    res.status(500).json({ message: "Помилка сервера", error: String(e) });
   }
 });
 

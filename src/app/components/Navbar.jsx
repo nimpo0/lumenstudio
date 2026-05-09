@@ -10,19 +10,27 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, logout, login, signup, authLoading } = useAuth();
+  const { user, logout, login, signup, loginWithGoogle, authLoading } = useAuth();
+
+  const role = user?.role || "client";
 
   const navLinks = [
     { path: "/", label: "Головна" },
     { path: "/services", label: "Послуги" },
     { path: "/portfolio", label: "Портфоліо" },
+    { path: "/studios", label: "Зали" },
     { path: "/photographers", label: "Фотографи" },
     { path: "/about", label: "Про нас" },
-    { path: "/booking", label: "Забронювати", authOnly: true },
-    { path: "/cabinet", label: "Кабінет", authOnly: true },
+    { path: "/booking", label: "Забронювати", showFor: ["client"] },
+    { path: "/cabinet", label: "Кабінет", showFor: ["client", "photographer"] },
+    { path: "/admin", label: "Адмін", showFor: ["admin"] },
   ];
 
-  const visibleLinks = navLinks.filter((l) => !l.authOnly || !!user);
+  const visibleLinks = navLinks.filter((l) => {
+    if (!l.showFor) return true;
+    if (!user) return false;
+    return l.showFor.includes(role);
+  });
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
@@ -106,6 +114,7 @@ const Navbar = () => {
         onClose={() => setAuthOpen(false)}
         onLogin={login}
         onSignUp={signup}
+        onGoogleLogin={loginWithGoogle}
       />
     </>
   );

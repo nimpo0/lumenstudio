@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { signInWithGoogleSupabase } from "../supabase";
 import "./loginAndSignup.css";
 
 const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) => {
@@ -120,10 +119,12 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
                   setErrorText("");
                   setLoading(true);
                   try {
-                    await signInWithGoogleSupabase();
+                    await onGoogleLogin();
+                    onClose?.();
                   } catch (err) {
                     console.error("Google auth error:", err);
                     setErrorText(err?.message || String(err) || "Помилка Google входу");
+                  } finally {
                     setLoading(false);
                   }
                 }}

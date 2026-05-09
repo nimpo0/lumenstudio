@@ -312,7 +312,7 @@ const Photographers = () => {
                     )}
                   </div>
 
-                  <p className="photographer-description">{photographer.description}</p>
+                  <p className="photographer-description">{photographer.bio}</p>
                 </div>
               </div>
 
@@ -325,7 +325,7 @@ const Photographers = () => {
               <div className="photographer-portfolio">
                 <h3>Міні-портфоліо</h3>
                 <div className="mini-portfolio-grid">
-                  {(photographer.portfolio || []).map((image, index) => (
+                  {(photographer.personalPortfolio || []).map((image, index) => (
                     <div key={index} className="mini-portfolio-item">
                       <img src={image} alt={`Робота ${index + 1}`} loading="lazy" />
                     </div>

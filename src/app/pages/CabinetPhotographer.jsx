@@ -525,6 +525,7 @@ const Portfolio = ({ profile, onSaveProfile }) => {
     const files = Array.from(fileList || []);
     if (files.length === 0) return;
     setUploadingWork(true);
+    setMsg("");
     try {
       const next = [...items];
       for (const file of files) {
@@ -533,6 +534,8 @@ const Portfolio = ({ profile, onSaveProfile }) => {
         next.push(url);
       }
       setItems(next);
+    } catch (e) {
+      setMsg("Помилка завантаження. Перевір налаштування Supabase Storage (bucket 'photos' має бути публічним).");
     } finally {
       setUploadingWork(false);
     }
@@ -553,8 +556,10 @@ const Portfolio = ({ profile, onSaveProfile }) => {
           <label className="label">Аватарка</label>
           <div className="avatar-row">
             {form.image && <img src={form.image} alt="" className="avatar-preview" />}
-            <input type="file" accept="image/*" disabled={uploadingAvatar} onChange={(e) => uploadAvatar(e.target.files?.[0])} />
-            {uploadingAvatar && <span className="text-light">Завантаження...</span>}
+            <label className="upload-label">
+              <input type="file" accept="image/*" disabled={uploadingAvatar} onChange={(e) => uploadAvatar(e.target.files?.[0])} />
+              {uploadingAvatar ? "Завантаження..." : form.image ? "Змінити фото" : "Завантажити фото"}
+            </label>
           </div>
         </div>
 
@@ -587,14 +592,16 @@ const Portfolio = ({ profile, onSaveProfile }) => {
 
       <div className="form-section">
         <h3>Особисті роботи</h3>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          disabled={uploadingWork}
-          onChange={(e) => uploadWorks(e.target.files)}
-        />
-        {uploadingWork && <p className="text-light">Завантаження...</p>}
+        <label className="upload-label">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            disabled={uploadingWork}
+            onChange={(e) => uploadWorks(e.target.files)}
+          />
+          {uploadingWork ? "Завантаження..." : "+ Додати роботи"}
+        </label>
 
         <div className="photo-grid" style={{ marginTop: 12 }}>
           {items.map((url, i) => (

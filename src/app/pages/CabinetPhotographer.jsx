@@ -7,7 +7,6 @@ import Modal from "../components/Modal";
 import { useAuth } from "../authorization/authContext";
 import { photographerApi } from "../api/photographer";
 import { bookingsApi } from "../api/bookings";
-import { uploadFile } from "../supabase";
 import "./CabinetPhotographer.css";
 
 const STATUS_FLOW = ["Підтверджено", "В роботі", "Готово до видачі", "Завершено"];
@@ -342,9 +341,7 @@ const AlbumEditor = ({ albums, onUpdate }) => {
 
   const [photos, setPhotos] = useState([]);
   const [cover, setCover] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [uploadError, setUploadError] = useState("");
+  const [urlInput, setUrlInput] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -363,40 +360,20 @@ const AlbumEditor = ({ albums, onUpdate }) => {
     );
   }
 
-  const handleFiles = async (fileList) => {
-    const files = Array.from(fileList || []);
-    if (files.length === 0) return;
-
-    setUploading(true);
-    setUploadError("");
-    const newUrls = [...photos];
-    let done = 0;
-    let errors = 0;
-
-    for (const file of files) {
-      const path = `albums/${album.id}/${Date.now()}-${file.name}`;
-      try {
-        const { url } = await uploadFile(path, file, (p) => {
-          setProgress((done + p) / files.length);
-        });
-        newUrls.push(url);
-      } catch (e) {
-        errors += 1;
-      }
-      done += 1;
-    }
-
-    setUploading(false);
-    setProgress(0);
-    if (errors > 0) setUploadError(`Не вдалося завантажити ${errors} фото. Перевір налаштування Supabase Storage.`);
-    setPhotos(newUrls);
-    if (newUrls.length > photos.length) {
-      await onUpdate(album.id, { photos: newUrls, cover: cover || newUrls[0] || "" });
-    }
+  const addUrls = async () => {
+    const newUrls = urlInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.startsWith("http"));
+    if (newUrls.length === 0) return;
+    const merged = [...photos, ...newUrls];
+    setPhotos(merged);
+    setUrlInput("");
+    await onUpdate(album.id, { photos: merged, cover: cover || merged[0] || "" });
   };
 
   const removePhoto = async (url) => {
-    if (!confirm("Видалити це фото з альбому?")) return;
+    if (!confirm("Видалити це фото?")) return;
     const next = photos.filter((u) => u !== url);
     const newCover = cover === url ? (next[0] || "") : cover;
     setPhotos(next);
@@ -423,34 +400,32 @@ const AlbumEditor = ({ albums, onUpdate }) => {
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
         <Button variant="secondary" onClick={() => navigate("/cabinet/albums")}>← Назад</Button>
         <h2 style={{ margin: 0 }}>{album.title}</h2>
-        <span className="badge badge-accent">{album.status}</span>
+        <span className="badge badge-accent">{album.status === "processing" ? "в обробці" : "готово"}</span>
       </div>
 
-      <div className="album-uploader">
-        <label className="upload-label">
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            disabled={uploading}
-            onChange={(e) => handleFiles(e.target.files)}
-          />
-          {uploading ? `Завантаження ${Math.round(progress * 100)}%...` : "+ Додати фото"}
-        </label>
-        {uploadError && <p className="text-light" style={{ color: "crimson", marginTop: 8 }}>{uploadError}</p>}
+      <div className="url-adder">
+        <label className="label">Додати фото по посиланню (можна кілька — кожне з нового рядка)</label>
+        <textarea
+          className="input"
+          rows={3}
+          placeholder={"https://...\nhttps://...\nhttps://..."}
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+        />
+        <Button onClick={addUrls} disabled={!urlInput.trim()}>Додати фото</Button>
       </div>
 
-      <div className="photo-grid">
+      <div className="photo-grid" style={{ marginTop: 16 }}>
         {photos.map((url, idx) => (
           <div key={idx} className={`photo-tile ${cover === url ? "is-cover" : ""}`}>
             <img src={url} alt="" />
             <div className="photo-actions">
-              <button onClick={() => setAsCover(url)} title="Зробити обкладинкою">★</button>
+              <button onClick={() => setAsCover(url)} title="Обкладинка">★</button>
               <button onClick={() => removePhoto(url)} title="Видалити">×</button>
             </div>
           </div>
         ))}
-        {photos.length === 0 && <p className="text-light">Альбом порожній. Завантажте фото вище.</p>}
+        {photos.length === 0 && <p className="text-light">Альбом порожній. Додайте посилання вище.</p>}
       </div>
 
       {album.status === "processing" && photos.length > 0 && (
@@ -476,10 +451,9 @@ const Portfolio = ({ profile, onSaveProfile }) => {
     image: "",
   });
   const [items, setItems] = useState([]);
+  const [worksInput, setWorksInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [uploadingWork, setUploadingWork] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -506,43 +480,14 @@ const Portfolio = ({ profile, onSaveProfile }) => {
     }
   };
 
-  const uploadAvatar = async (file) => {
-    if (!file || !profile) return;
-    setUploadingAvatar(true);
-    setMsg("");
-    try {
-      const path = `photographers/${profile.id}/avatar-${Date.now()}-${file.name}`;
-      const { url } = await uploadFile(path, file);
-      const updated = { ...form, image: url };
-      setForm(updated);
-      await onSaveProfile({ ...updated, personalPortfolio: items });
-      setMsg("Аватарку збережено");
-    } catch (e) {
-      setMsg("Помилка завантаження аватарки");
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const uploadWorks = async (fileList) => {
-    if (!profile) return;
-    const files = Array.from(fileList || []);
-    if (files.length === 0) return;
-    setUploadingWork(true);
-    setMsg("");
-    try {
-      const next = [...items];
-      for (const file of files) {
-        const path = `photographers/${profile.id}/works/${Date.now()}-${file.name}`;
-        const { url } = await uploadFile(path, file);
-        next.push(url);
-      }
-      setItems(next);
-    } catch (e) {
-      setMsg("Помилка завантаження. Перевір налаштування Supabase Storage (bucket 'photos' має бути публічним).");
-    } finally {
-      setUploadingWork(false);
-    }
+  const addWorks = () => {
+    const newUrls = worksInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.startsWith("http"));
+    if (newUrls.length === 0) return;
+    setItems((prev) => [...prev, ...newUrls]);
+    setWorksInput("");
   };
 
   const removeWork = (url) => {
@@ -557,13 +502,15 @@ const Portfolio = ({ profile, onSaveProfile }) => {
         <h3>Профіль</h3>
 
         <div className="form-group">
-          <label className="label">Аватарка</label>
+          <label className="label">Фото профілю (посилання)</label>
           <div className="avatar-row">
             {form.image && <img src={form.image} alt="" className="avatar-preview" />}
-            <label className="upload-label">
-              <input type="file" accept="image/*" disabled={uploadingAvatar} onChange={(e) => uploadAvatar(e.target.files?.[0])} />
-              {uploadingAvatar ? "Завантаження..." : form.image ? "Змінити фото" : "Завантажити фото"}
-            </label>
+            <input
+              className="input"
+              placeholder="https://..."
+              value={form.image}
+              onChange={(e) => setForm({ ...form, image: e.target.value })}
+            />
           </div>
         </div>
 
@@ -596,16 +543,17 @@ const Portfolio = ({ profile, onSaveProfile }) => {
 
       <div className="form-section">
         <h3>Особисті роботи</h3>
-        <label className="upload-label">
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            disabled={uploadingWork}
-            onChange={(e) => uploadWorks(e.target.files)}
+        <div className="url-adder">
+          <label className="label">Додати фото по посиланню (кілька — кожне з нового рядка)</label>
+          <textarea
+            className="input"
+            rows={3}
+            placeholder={"https://...\nhttps://..."}
+            value={worksInput}
+            onChange={(e) => setWorksInput(e.target.value)}
           />
-          {uploadingWork ? "Завантаження..." : "+ Додати роботи"}
-        </label>
+          <Button onClick={addWorks} disabled={!worksInput.trim()}>Додати</Button>
+        </div>
 
         <div className="photo-grid" style={{ marginTop: 12 }}>
           {items.map((url, i) => (

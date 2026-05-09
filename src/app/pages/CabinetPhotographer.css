@@ -132,6 +132,13 @@
   object-fit: cover;
 }
 
+.url-adder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .form-section {
   padding: 16px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);

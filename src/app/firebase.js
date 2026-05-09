@@ -1,23 +1,26 @@
-// Firebase — тільки для Google Auth (popup + ID token)
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
-};
+function getFirebaseApp() {
+  if (getApps().length) return getApps()[0];
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  if (!apiKey) throw new Error("Firebase API key не налаштовано");
 
-const googleProvider = new GoogleAuthProvider();
+  return initializeApp({
+    apiKey,
+    authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  });
+}
 
 export async function signInWithGoogle() {
-  const result = await signInWithPopup(auth, googleProvider);
+  const app = getFirebaseApp();
+  const auth = getAuth(app);
+  const result = await signInWithPopup(auth, new GoogleAuthProvider());
   const idToken = await result.user.getIdToken();
   return { idToken, user: result.user };
 }

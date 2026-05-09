@@ -50,10 +50,28 @@
 
 .album-uploader {
   margin: 16px 0;
-  padding: 16px;
-  border: 2px dashed rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.02);
+}
+
+.upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px dashed var(--color-accent, #D4845C);
+  background: rgba(212, 132, 92, 0.05);
+  color: var(--color-accent, #D4845C);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.upload-label:hover {
+  background: rgba(212, 132, 92, 0.12);
+}
+
+.upload-label input[type="file"] {
+  display: none;
 }
 
 .photo-grid {

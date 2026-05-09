@@ -80,8 +80,9 @@ const Home = () => {
                 size="large"
                 onClick={() => {
                   if (authLoading) return;
-                  if (!user) {
-                    setAuthOpen(true);
+                  if (!user) { setAuthOpen(true); return; }
+                  if (user.role === "photographer" || user.role === "admin") {
+                    navigate("/cabinet");
                     return;
                   }
                   navigate("/booking");

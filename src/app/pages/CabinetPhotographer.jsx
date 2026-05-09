@@ -63,7 +63,7 @@ const Overview = ({ stats, bookings, profile }) => {
               <div className="booking-info">
                 <h4>{b.serviceLabel}</h4>
                 <p className="text-small text-light">
-                  {b.date} о {b.time} · клієнт: {b.userId}
+                  {b.date} о {b.time} · {b.clientName || "Клієнт"}
                 </p>
               </div>
               <span className="badge badge-accent">{b.status}</span>
@@ -254,7 +254,7 @@ const Sessions = ({ bookings, onChangeStatus, onReschedule }) => {
                 <td>
                   <select
                     className="input"
-                    value={b.status}
+                    value={STATUS_FLOW.includes(b.status) ? b.status : "Підтверджено"}
                     onChange={(e) => onChangeStatus(b.id, e.target.value)}
                   >
                     {STATUS_FLOW.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -340,6 +340,7 @@ const AlbumEditor = ({ albums, onUpdate }) => {
   const [cover, setCover] = useState("");
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -363,27 +364,31 @@ const AlbumEditor = ({ albums, onUpdate }) => {
     if (files.length === 0) return;
 
     setUploading(true);
+    setUploadError("");
     const newUrls = [...photos];
     let done = 0;
+    let errors = 0;
 
     for (const file of files) {
       const path = `albums/${album.id}/${Date.now()}-${file.name}`;
       try {
         const { url } = await uploadFile(path, file, (p) => {
-          const overall = (done + p) / files.length;
-          setProgress(overall);
+          setProgress((done + p) / files.length);
         });
         newUrls.push(url);
       } catch (e) {
-        console.error("Помилка завантаження:", e);
+        errors += 1;
       }
       done += 1;
     }
 
     setUploading(false);
     setProgress(0);
+    if (errors > 0) setUploadError(`Не вдалося завантажити ${errors} фото. Перевір налаштування Supabase Storage.`);
     setPhotos(newUrls);
-    await onUpdate(album.id, { photos: newUrls, cover: cover || newUrls[0] || "" });
+    if (newUrls.length > photos.length) {
+      await onUpdate(album.id, { photos: newUrls, cover: cover || newUrls[0] || "" });
+    }
   };
 
   const removePhoto = async (url) => {
@@ -418,14 +423,17 @@ const AlbumEditor = ({ albums, onUpdate }) => {
       </div>
 
       <div className="album-uploader">
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          disabled={uploading}
-          onChange={(e) => handleFiles(e.target.files)}
-        />
-        {uploading && <p className="text-light">Завантаження... {Math.round(progress * 100)}%</p>}
+        <label className="upload-label">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            disabled={uploading}
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+          {uploading ? `Завантаження ${Math.round(progress * 100)}%...` : "+ Додати фото"}
+        </label>
+        {uploadError && <p className="text-light" style={{ color: "crimson", marginTop: 8 }}>{uploadError}</p>}
       </div>
 
       <div className="photo-grid">
@@ -497,10 +505,16 @@ const Portfolio = ({ profile, onSaveProfile }) => {
   const uploadAvatar = async (file) => {
     if (!file || !profile) return;
     setUploadingAvatar(true);
+    setMsg("");
     try {
       const path = `photographers/${profile.id}/avatar-${Date.now()}-${file.name}`;
       const { url } = await uploadFile(path, file);
-      setForm((f) => ({ ...f, image: url }));
+      const updated = { ...form, image: url };
+      setForm(updated);
+      await onSaveProfile({ ...updated, personalPortfolio: items });
+      setMsg("Аватарку збережено");
+    } catch (e) {
+      setMsg("Помилка завантаження аватарки");
     } finally {
       setUploadingAvatar(false);
     }

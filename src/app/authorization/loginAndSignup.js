@@ -123,7 +123,14 @@ const LoginAndSignup = ({ isOpen, onClose, onLogin, onSignUp, onGoogleLogin }) =
                     await onGoogleLogin();
                     onClose?.();
                   } catch (err) {
-                    setErrorText(err?.message || "Не вдалося увійти через Google");
+                    const msg = err?.message || "";
+                    if (msg.includes("api-key") || msg.includes("invalid-api-key")) {
+                      setErrorText("Google вхід не налаштований. Зверніться до адміністратора.");
+                    } else if (msg.includes("popup-closed")) {
+                      setErrorText("Вікно авторизації закрито. Спробуйте ще раз.");
+                    } else {
+                      setErrorText("Не вдалося увійти через Google. Спробуйте email/пароль.");
+                    }
                   } finally {
                     setLoading(false);
                   }

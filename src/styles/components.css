@@ -2,27 +2,42 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-2) var(--spacing-4);
+  padding: 10px 22px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 1rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.18s ease;
   text-decoration: none;
-  gap: var(--spacing-1);
+  gap: 8px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btn-primary {
   background-color: var(--color-accent);
   color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(212, 132, 92, 0.30);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: var(--color-accent-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(212, 132, 92, 0.40);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(212, 132, 92, 0.25);
 }
 
 .btn-secondary {
@@ -31,19 +46,24 @@
   border: 2px solid var(--color-accent);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background-color: var(--color-accent);
   color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(212, 132, 92, 0.25);
+  transform: translateY(-1px);
 }
 
 .btn-large {
-  padding: var(--spacing-2) var(--spacing-5);
-  font-size: 1.125rem;
+  padding: 13px 30px;
+  font-size: 1.0625rem;
+  border-radius: 12px;
 }
 
 .btn-small {
-  padding: var(--spacing-1) var(--spacing-2);
-  font-size: 0.875rem;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .card {

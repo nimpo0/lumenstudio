@@ -73,14 +73,20 @@
 
 .studio-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
   margin-top: 16px;
 }
 
 .studio-gallery img {
   width: 100%;
-  height: 100px;
+  height: 160px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.studio-gallery img:hover {
+  transform: scale(1.02);
 }

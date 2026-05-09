@@ -150,25 +150,27 @@
 
 .success-screen {
   text-align: center;
-  max-width: 600px;
-  margin: var(--spacing-10) auto;
-  padding: var(--spacing-8);
-  background-color: var(--color-white);
-  border-radius: var(--radius-lg);
+  max-width: 520px;
+  margin: 60px auto;
+  padding: 48px 40px;
+  background: var(--color-white);
+  border-radius: 20px;
   box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
 }
 
 .success-icon {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto var(--spacing-4);
-  background-color: var(--color-accent);
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  color: var(--color-white);
+  font-size: 2.25rem;
+  color: white;
+  box-shadow: 0 8px 24px rgba(212, 132, 92, 0.4);
 }
 
 .success-screen h1 {

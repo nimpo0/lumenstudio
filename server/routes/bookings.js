@@ -235,7 +235,7 @@ router.patch("/:id/reschedule", authMiddleware, async (req, res) => {
     if (!isOwner && !isPhotog && !isAdmin) return res.status(403).json({ message: "Нема доступу" });
 
     const startTs = new Date(`${b.date}T${b.time}:00`).getTime();
-    if (!Number.isNaN(startTs) && startTs - Date.now() < 24 * 60 * 60 * 1000) {
+    if (!Number.isNaN(startTs) && startTs > Date.now() && startTs - Date.now() < 24 * 60 * 60 * 1000) {
       return res.status(400).json({ message: "Перенесення доступне не пізніше ніж за 24 години до сесії" });
     }
 

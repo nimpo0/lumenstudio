@@ -106,13 +106,19 @@ router.get("/bookings", async (req, res) => {
     const phId = req.user.photographerId;
     if (!phId) return res.json([]);
     const rows = await db.many(
-      "SELECT * FROM bookings WHERE photographer_id = $1 ORDER BY date, time",
+      `SELECT b.*, u.name AS client_name, u.email AS client_email
+       FROM bookings b
+       LEFT JOIN users u ON u.id = b.user_id
+       WHERE b.photographer_id = $1
+       ORDER BY b.date, b.time`,
       [phId]
     );
     res.json(rows.map((r) => ({
       id: r.id, date: r.date, time: r.time,
       serviceLabel: r.service_label, status: r.status,
-      durationMin: r.duration_min, userId: r.user_id,
+      durationMin: r.duration_min,
+      clientName: r.client_name || r.client_email || r.user_id,
+      notes: r.notes,
     })));
   } catch (e) {
     res.status(500).json({ message: "Помилка", error: String(e) });

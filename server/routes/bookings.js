@@ -128,6 +128,13 @@ router.post("/", authMiddleware, async (req, res) => {
     const photId = photographerId ? String(photographerId) : null;
     const stuId = studioId ? String(studioId) : null;
 
+    const svc = await db.one("SELECT duration FROM services WHERE id = $1", [serviceId]);
+    const durationText = svc?.duration || "";
+    const durationMin = parseDurationToMinutes(durationText);
+    const startMin = timeToMin(time);
+    const endMin = startMin + durationMin;
+    const studioHours = Math.max(1, Math.ceil(durationMin / 60));
+
     let photographerLabel = null;
     if (photId) {
       const ph = await db.one("SELECT name FROM photographers WHERE id = $1", [photId]);
@@ -141,14 +148,15 @@ router.post("/", authMiddleware, async (req, res) => {
       const st = await db.one("SELECT name, hourly_price FROM studios WHERE id = $1", [stuId]);
       if (!st) return res.status(400).json({ message: "Зал не знайдено" });
       studioLabel = st.name;
-      studioPrice = Number(st.hourly_price || 0);
+      studioPrice = Number(st.hourly_price || 0) * studioHours;
     }
 
-    const svc = await db.one("SELECT duration FROM services WHERE id = $1", [serviceId]);
-    const durationText = svc?.duration || "";
-    const durationMin = parseDurationToMinutes(durationText);
-    const startMin = timeToMin(time);
-    const endMin = startMin + durationMin;
+    const additionalArray = Array.isArray(additional) ? additional : [];
+    const additionalSum = additionalArray.reduce(
+      (sum, a) => sum + (Number(a?.price) || 0),
+      0
+    );
+    const computedTotal = Number(servicePrice || 0) + studioPrice + additionalSum;
 
     const conflicts = await checkConflicts({ photographerId: photId, studioId: stuId, date, startMin, endMin });
     if (conflicts.length > 0) {
@@ -181,10 +189,10 @@ router.post("/", authMiddleware, async (req, res) => {
         serviceLabel || svc?.title || serviceId, Number(servicePrice || 0),
         photId, photographerLabel, stuId, studioLabel, studioPrice,
         durationText || null, durationMin, startMin, endMin,
-        JSON.stringify(Array.isArray(additional) ? additional : []),
+        JSON.stringify(additionalArray),
         String(notes || ""), slotKey, status,
         paymentMethod === "online" ? "online" : "onsite",
-        Number(total || 0),
+        computedTotal,
       ]
     );
 

@@ -14,6 +14,14 @@ const TIME_SLOTS = [
   "15:00", "16:00", "17:00", "18:00", "19:00",
 ];
 
+function parseDurationToMinutes(raw) {
+  if (!raw) return 60;
+  const s = String(raw).trim().toLowerCase().replace(",", ".");
+  const m = s.match(/(\d+(\.\d+)?)\s*(годин|година|години?)/i);
+  if (m) return Math.max(1, Math.round(Number(m[1]) * 60));
+  return 60;
+}
+
 const ADDITIONAL_SERVICES = [
   { value: "express", label: "Експрес-обробка (24 год)", price: 800 },
   { value: "preview", label: "Швидкий перегляд (5 фото за 24 год)", price: 400 },
@@ -160,11 +168,20 @@ const Booking = () => {
     return busySlots.some((b) => b.startMin <= slotMin && slotMin < b.endMin);
   };
 
+  const sessionHours = useMemo(() => {
+    const min = parseDurationToMinutes(selectedService?.duration);
+    return Math.max(1, Math.ceil(min / 60));
+  }, [selectedService]);
+
+  const studioCost = useMemo(
+    () => (selectedStudio?.hourlyPrice || 0) * sessionHours,
+    [selectedStudio, sessionHours]
+  );
+
   const calculateTotal = () => {
     const base = selectedService?.price || 0;
-    const studio = selectedStudio?.hourlyPrice || 0;
     const additionalTotal = selectedAdditional.reduce((sum, a) => sum + (a.price || 0), 0);
-    return base + studio + additionalTotal;
+    return base + studioCost + additionalTotal;
   };
 
   const handleChange = (e) => {
@@ -546,8 +563,8 @@ const Booking = () => {
 
                   {selectedStudio && (
                     <div className="summary-item">
-                      <span>Зал ({selectedStudio.label}):</span>
-                      <strong>{selectedStudio.hourlyPrice} ₴/год</strong>
+                      <span>Зал ({selectedStudio.label}, {sessionHours} год × {selectedStudio.hourlyPrice} ₴):</span>
+                      <strong>{studioCost} ₴</strong>
                     </div>
                   )}
                   {formData.date && (

@@ -332,6 +332,12 @@ const AlbumsList = ({ albums }) => {
               <p className="text-small text-light">
                 {(a.photos || []).length} фото · {a.status === "processing" ? "в обробці" : "готово"}
               </p>
+              {a.review && (
+                <p className="text-small" style={{ marginTop: 4 }}>
+                  Відгук клієнта: <strong>{a.review.rating} ★</strong>
+                  {a.review.comment ? ` · "${a.review.comment.length > 60 ? a.review.comment.slice(0, 60) + "…" : a.review.comment}"` : ""}
+                </p>
+              )}
               <Link to={`/cabinet/albums/${a.id}`}>
                 <Button size="small">Відкрити</Button>
               </Link>
@@ -448,6 +454,36 @@ const AlbumEditor = ({ albums, onUpdate }) => {
           </p>
         </div>
       )}
+
+      <div className="form-section" style={{ marginTop: 32 }}>
+        <h3>Відгук клієнта</h3>
+        {album.review ? (
+          <div className="review-block">
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <strong style={{ fontSize: 18 }}>{album.review.rating} ★</strong>
+              <span className="text-small text-light">від {album.review.userName}</span>
+            </div>
+            {album.review.comment ? (
+              <p style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{album.review.comment}</p>
+            ) : (
+              <p className="text-small text-light" style={{ marginTop: 8 }}>
+                Клієнт не залишив коментаря.
+              </p>
+            )}
+            {album.review.updatedAt && (
+              <p className="text-small text-light" style={{ marginTop: 8 }}>
+                {new Date(album.review.updatedAt).toLocaleString("uk-UA")}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-light">
+            {album.status === "ready"
+              ? "Клієнт ще не залишив відгук."
+              : "Відгук з'явиться після публікації альбому."}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

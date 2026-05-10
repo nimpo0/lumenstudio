@@ -206,10 +206,37 @@ router.get("/albums", async (req, res) => {
        WHERE b.photographer_id = $1`,
       [phId]
     );
+
+    const albumIds = rows.map((r) => r.id);
+    const reviewsByAlbum = {};
+    if (albumIds.length > 0) {
+      const reviewRows = await db.many(
+        `SELECT r.album_id, r.rating, r.comment, r.created_at, r.updated_at,
+                u.name AS user_name, u.email AS user_email
+         FROM reviews r
+         LEFT JOIN users u ON u.id = r.user_id
+         WHERE r.album_id = ANY($1::text[])
+         ORDER BY r.updated_at DESC`,
+        [albumIds]
+      );
+      reviewRows.forEach((rv) => {
+        if (!reviewsByAlbum[rv.album_id]) {
+          reviewsByAlbum[rv.album_id] = {
+            rating: rv.rating,
+            comment: rv.comment,
+            createdAt: rv.created_at,
+            updatedAt: rv.updated_at,
+            userName: rv.user_name || rv.user_email || "Клієнт",
+          };
+        }
+      });
+    }
+
     res.json(rows.map((r) => ({
       id: r.id, bookingId: r.booking_id, title: r.title,
       status: r.status, message: r.message, cover: r.cover,
       photos: r.photos || [],
+      review: reviewsByAlbum[r.id] || null,
     })));
   } catch (e) {
     res.status(500).json({ message: "Помилка", error: String(e) });

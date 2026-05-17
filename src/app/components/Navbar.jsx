@@ -10,7 +10,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, logout, login, signup, loginWithGoogle, authLoading } = useAuth();
+  const { user, logout, login, signup, authLoading } = useAuth();
 
   const role = user?.role || "client";
 
@@ -114,7 +114,6 @@ const Navbar = () => {
         onClose={() => setAuthOpen(false)}
         onLogin={login}
         onSignUp={signup}
-        onGoogleLogin={loginWithGoogle}
       />
     </>
   );

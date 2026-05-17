@@ -1,6 +1,8 @@
 server/.env
+.env
 
 server/serviceAccount.json
+.claude/
 
 node_modules
 **/node_modules

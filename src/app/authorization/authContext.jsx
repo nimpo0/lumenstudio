@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { subscribeToAuth, logIn, logOut, signUp, logInWithGoogle } from "./authService";
+import { subscribeToAuth, logIn, logOut, signUp } from "./authService";
 
 const AuthContext = createContext(null);
 
@@ -26,11 +26,6 @@ export function AuthProvider({ children }) {
     },
     signup: async (email, pass, name) => {
       const u = await signUp(email, pass, name);
-      setUser(u);
-      return u;
-    },
-    loginWithGoogle: async () => {
-      const u = await logInWithGoogle();
       setUser(u);
       return u;
     },

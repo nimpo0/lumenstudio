@@ -23,7 +23,7 @@ const Home = () => {
   const [error, setError] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, login, signup, loginWithGoogle, authLoading } = useAuth();
+  const { user, login, signup, authLoading } = useAuth();
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -109,11 +109,6 @@ const Home = () => {
           }}
           onSignUp={async (email, pass, name) => {
             await signup(email, pass, name);
-            setAuthOpen(false);
-            navigate("/booking");
-          }}
-          onGoogleLogin={async () => {
-            await loginWithGoogle();
             setAuthOpen(false);
             navigate("/booking");
           }}

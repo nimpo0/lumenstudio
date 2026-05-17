@@ -6,23 +6,32 @@ import { albumsApi } from "../api/albums";
 import { bookingsApi } from "../api/bookings";
 import { reviewsApi } from "../api/reviews";
 
+const API_URL = "https://nimpo0-github-io.onrender.com";
+const TOKEN_KEY = "lumen_token";
+
 const safeArray = (v) => (Array.isArray(v) ? v : []);
 
-const downloadPhoto = async (url, filename = "photo.jpg") => {
+async function downloadPhoto(url, filename = "photo.jpg") {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const proxy = `${API_URL}/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(proxy, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("failed");
     const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = blobUrl;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   } catch {
     window.open(url, "_blank");
   }
-};
+}
 
 const AlbumsList = ({ albums, bookingsById }) => {
   const navigate = useNavigate();
@@ -84,6 +93,13 @@ const AlbumDetails = ({ albums }) => {
   const [saving, setSaving] = useState(false);
   const [reviewMsg, setReviewMsg] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload(url, filename) {
+    setDownloading(true);
+    await downloadPhoto(url, filename);
+    setTimeout(() => setDownloading(false), 600);
+  }
 
   const album = useMemo(
     () => albums.find((a) => String(a.id) === String(albumId)),
@@ -170,9 +186,10 @@ const AlbumDetails = ({ albums }) => {
 
             <Button
               size="small"
-              onClick={() => downloadPhoto(photos[activeIndex], `${album.title}-${activeIndex + 1}.jpg`)}
+              disabled={downloading}
+              onClick={() => handleDownload(photos[activeIndex], `${album.title}-${activeIndex + 1}.jpg`)}
             >
-              Завантажити це фото
+              {downloading ? "Завантаження..." : "Завантажити"}
             </Button>
 
             <Button size="small" variant="secondary" onClick={() => setActiveIndex((i) => Math.min(photos.length - 1, i + 1))}>

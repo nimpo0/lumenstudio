@@ -12,6 +12,7 @@ const servicesReviews = require("./routes/servicesReviews.js");
 const availability = require("./routes/availability.js");
 const adminRoutes = require("./routes/admin.js");
 const photographerRoutes = require("./routes/photographer.js");
+const downloadRoute = require("./routes/download.js");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/availability", availability);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/photographer", photographerRoutes);
+app.use("/api/download", downloadRoute);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Сервер запущено`));

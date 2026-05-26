@@ -326,7 +326,7 @@ const Booking = () => {
           <div className="container">
             <div className="success-screen">
               <div className="success-icon">✓</div>
-              <h1>Бронювання успішно створено!</h1>
+              <h1>Бронювання успішно сформоване!</h1>
               <p className="text-large text-light">
                 {formData.paymentMethod === "online"
                   ? "Оплата отримана. Очікуйте дзвінка для підтвердження деталей."
